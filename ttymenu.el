@@ -25,6 +25,8 @@
 (defvar ttymenu--day-offset 0
   "How many days from now to fetch menus.")
 
+(defvar ttymenu--restaurant-offset 0
+  "How many restaurants are skipped when displaying.")
 
 (defvar ttymenu--menu-cache (make-hash-table :test 'equal)
   "Cached menu data to avoid extra API calls.")
@@ -89,12 +91,15 @@
     (insert (concat item (make-string padding-len ? ) prices "\n")))
   (mapc 'ttymenu--list-content (plist-get meal :contents)))
 
-(defun ttymenu--list-meals (restaurant)
-  "List all meals from RESTAURANT."
+(defun ttymenu--insert-restaurant-title (restaurant)
   (let* ((item (concat "= " (decode-coding-string (plist-get restaurant :name) 'utf-8) " "))
          (item-len (length item))
          (padding-len (- (- (window-total-width) 4) item-len)))
-    (insert (concat item (make-string padding-len ?=) "=\n")))
+    (insert (concat item (make-string padding-len ?=) "=\n"))))
+
+(defun ttymenu--list-meals (restaurant)
+  "List all meals from RESTAURANT."
+  (ttymenu--insert-restaurant-title restaurant)
   (mapc
    (lambda (subrestaurant)
      (let* ((item (concat "-- " (decode-coding-string (plist-get subrestaurant :name) 'utf-8) " "))
@@ -110,7 +115,17 @@
       ;; Insert contents
       (erase-buffer)
       (ttymenu--insert-header)
-      (mapc 'ttymenu--list-meals ttymenu--menu-alist))
+
+      (when (< ttymenu--restaurant-offset 0)
+        (setq ttymenu--restaurant-offset 0))
+
+      (when (>= ttymenu--restaurant-offset (length ttymenu--menu-alist))
+        (setq ttymenu--restaurant-offset (- (length ttymenu--menu-alist) 1)))
+
+      (mapc 'ttymenu--insert-restaurant-title
+            (subseq ttymenu--menu-alist 0 ttymenu--restaurant-offset))
+      (mapc 'ttymenu--list-meals
+            (subseq ttymenu--menu-alist ttymenu--restaurant-offset)))
 
     ;; Run the menu in org-mode
     (let ((mode 'ttymenu-mode))
@@ -127,6 +142,7 @@
   (interactive)
 
   (setq ttymenu--day-offset 0)
+  (setq ttymenu--restaurant-offset 0)
 
   ;; Refresh the data from server
   (ttymenu--get-data
@@ -154,6 +170,18 @@
   (kill-this-buffer)
   (delete-window))
 
+(defun ttymenu-next-restaurant ()
+  (interactive)
+  (message (number-to-string ttymenu--restaurant-offset))
+  (setq ttymenu--restaurant-offset (+ ttymenu--restaurant-offset 1))
+  (ttymenu--redraw))
+
+(defun ttymenu-previous-restaurant ()
+  (interactive)
+  (message (number-to-string ttymenu--restaurant-offset))
+  (setq ttymenu--restaurant-offset (- ttymenu--restaurant-offset 1))
+  (ttymenu--redraw))
+
 (defvar ttymenu-mode-map
   (let ((map (make-sparse-keymap))) map))
 
@@ -164,14 +192,15 @@
   (local-set-key (kbd "h") 'ttymenu-previous-day)
   (add-hook 'window-configuration-change-hook #'ttymenu--redraw t t))
 
-(add-hook 'ttymenu-mode-hook
-  (lambda () 
-    (font-lock-add-keywords nil 
-      '(("^  TUT Menu .*$" . font-lock-warning-face)
-        ("^= .*" . font-lock-builtin-face)
-        ("^-- .*" . font-lock-constant-face)
-	("^ \\(.*\\)       \\([0-9][0-9, ]+[0-9]\\)$"
-	 (1 font-lock-comment-face) (2 font-lock-string-face))))))
+(defun ttymenu--ttymenu-hook ()
+  (setq imenu-generic-expression '((nil "^= \\(.+\\) ====+" 1)))
+  (font-lock-add-keywords nil 
+    '(("^  TUT Menu .*$" . font-lock-warning-face)
+      ("^= .*" . font-lock-builtin-face)
+      ("^-- .*" . font-lock-constant-face)
+      ("^ \\(.*\\)       \\([0-9][0-9, ]+[0-9]\\)$"
+       (1 font-lock-comment-face) (2 font-lock-string-face)))))
+(add-hook 'ttymenu-mode-hook #'ttymenu--ttymenu-hook)
 
 (provide 'ttymenu)
 ;;; ttymenu.el ends here
