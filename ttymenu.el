@@ -60,7 +60,7 @@
 (defun ttymenu--insert-header ()
   (let* ((weekdays [nil "Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday" "Sunday"])
          (date (ttymenu--get-datetime-from-offset ttymenu--day-offset))
-         (weekday (aref weekdays (string-to-int (format-time-string "%u" date)))))
+         (weekday (aref weekdays (string-to-number (format-time-string "%u" date)))))
    (insert (concat "  TUT Menu  -  "
                    weekday
                    (format-time-string ", %d. of %B %Y" date)
