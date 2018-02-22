@@ -2,14 +2,17 @@
 
 LunchTime.el provides a unified interface to multiple restaurant menu sources.
 
-Sample configuration (with use-package and general.el), contains adapters for three restaurant APIs:
+#+CAPTION: Screenshot
+[[./screenshot.png]]
+
+Sample configuration (with use-package and general.el), contains adapters for three restaurant APIs, and evil-style keybindings:
 #+BEGIN_SRC elisp
 (use-package lunchtime
   :load-path "/path/to/lunchtime/source"
   :commands (lunchtime-display-menus)
   :config
 
-  ;; TTY
+  ;; Tampere University of Technology
   (lunchtime-define-restaurant
    "https://api.ruoka.xyz/%Y-%m-%d"
    (mapcar
