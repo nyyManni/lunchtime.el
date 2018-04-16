@@ -100,27 +100,30 @@ Data is fetched only if it is not in cache."
   (apply #'append
          (mapcar
           (lambda (r)
-            (let* ((url-template (car r))
-                   (parser (lambda ()
-                             (funcall (cdr r)
-                                      (let ((json-array-type 'list))
-                                        (json-read)))))
-                   (formatted-url (format-time-string
-                                   url-template
-                                   (time-add (current-time)
-                                             (days-to-time offset)))))
+            (condition-case nil
+                (let* ((url-template (car r))
+                       (parser (lambda ()
+                                 (funcall (cdr r)
+                                          (let ((json-array-type 'list))
+                                            (json-read)))))
+                       (formatted-url (format-time-string
+                                       url-template
+                                       (time-add (current-time)
+                                                 (days-to-time offset)))))
 
-              (or (gethash formatted-url *lunchtime-cache*)
-                  (puthash formatted-url
-                           (let ((response (request formatted-url
-                                                    :sync t
-                                                    :headers `(("Content-Type"
-                                                                . "application/json"))
-                                                    :parser parser)))
-                             (unless (= (request-response-status-code response) 200)
-                               (user-error "Failed to fetch menu info"))
-                             (request-response-data response))
-                           *lunchtime-cache*))))
+                  (or (gethash formatted-url *lunchtime-cache*)
+                      (puthash formatted-url
+                               (let ((response (request formatted-url
+                                                        :sync t
+                                                        :headers `(("Content-Type"
+                                                                    . "application/json"))
+                                                        :parser parser)))
+                                 (unless (= (request-response-status-code response) 200)
+                                   (error "Failed to fetch menu info"))
+                                 (request-response-data response))
+                               *lunchtime-cache*)))
+
+                (error nil)))
           lunchtime-parsers-alist)))
 
 (defun lunchtime--insert-title (restaurant)
