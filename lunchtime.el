@@ -143,7 +143,8 @@ Data is fetched only if it is not in cache."
 
 (defun lunchtime--insert-menu-title (meal)
   "Insert name of the MEAL."
-  (let* ((item (concat " " (capitalize (downcase (assoc-recursive meal 'name)))))
+  (let* ((item (concat " " (capitalize (downcase (or (assoc-recursive meal 'name)
+                                                     "")))))
          (item-len (length item))
          (prices (mapconcat
                   (lambda (p) (format "%+5s" p))
