@@ -223,7 +223,8 @@ Data is fetched only if it is not in cache."
   "Close the buffer (and window)."
   (interactive)
   (kill-this-buffer)
-  (delete-window))
+  (unless (one-window-p t)
+    (delete-window)))
 
 (defun lunchtime-next-restaurant ()
   "Fold one more item."
