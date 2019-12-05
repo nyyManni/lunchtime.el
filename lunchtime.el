@@ -254,7 +254,7 @@ Data is fetched only if it is not in cache."
     '(("^  LunchTime Menu .*$" . font-lock-warning-face)
       ("^= .*" . font-lock-builtin-face)
       ("^-- .*" . font-lock-constant-face)
-      ("^ \\(.*\\)       \\([0-9][0-9, ]+[0-9]\\)$"
+      ("^ \\(.*\\)       \\([$0-9][0-9, €]+[0-9] *[€]?\\)$"
        (1 font-lock-comment-face) (2 font-lock-string-face)))))
 (add-hook 'lunchtime-mode-hook #'lunchtime--lunchtime-hook)
 
