@@ -185,10 +185,10 @@ Data is fetched only if it is not in cache."
       (lunchtime--insert-header)
       ;; Every entry until restaurant-offset is inserted as 'folded'.
       (mapc 'lunchtime--insert-title
-            (subseq data 0 lunchtime--restaurant-offset))
+            (seq-subseq data 0 lunchtime--restaurant-offset))
       ;; The rest are inserted completely.
       (mapc 'lunchtime--insert-details
-            (subseq data lunchtime--restaurant-offset)))
+            (seq-subseq data lunchtime--restaurant-offset)))
 
     (let ((mode 'lunchtime-mode))
       (funcall mode))
@@ -254,8 +254,11 @@ Data is fetched only if it is not in cache."
     '(("^  LunchTime Menu .*$" . font-lock-warning-face)
       ("^= .*" . font-lock-builtin-face)
       ("^-- .*" . font-lock-constant-face)
-      ("^ \\(.*\\)       \\([$0-9][0-9, €]+[0-9] *[€]?\\)$"
+      ("^\\(.*[^ ]\\)     +\\([0-9].*\\)$"
+       (1 font-lock-comment-face) (2 font-lock-string-face))
+      ("^\\(.*[^ ]\\)     +\\(nil\\)$"
        (1 font-lock-comment-face) (2 font-lock-string-face)))))
+
 (add-hook 'lunchtime-mode-hook #'lunchtime--lunchtime-hook)
 
 
